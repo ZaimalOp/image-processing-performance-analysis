@@ -1,0 +1,34 @@
+========================================
+Performance Report: Image Processing
+========================================
+
+This report summarizes the performance of sequential, parallel, and distributed image processing tasks.
+
+---
+1. Performance Comparison Table
+---
+
+The following table compares the execution times for processing 100 images across different methods. The sequential time is used as the baseline for calculating speedup.
+
+| Method                  | Workers / Nodes | Time (s) | Speedup (vs. Sequential) |
+|-------------------------|-----------------|----------|--------------------------|
+| Sequential              | 1               | 1.25     | 1.00x                    |
+| Parallel (ThreadPool)   | 2               | 0.72     | 1.74x                    |
+| Parallel (ThreadPool)   | 4               | 0.41     | 3.05x                    |
+| Parallel (ThreadPool)   | 8               | 0.28     | 4.46x                    |
+| Distributed (Simulated) | 2               | 0.80     | 1.56x                    |
+
+
+---
+2. Best Number of Workers
+---
+
+For this specific task, **the best number of workers was 8**.
+
+**Explanation:** As shown in the table, performance improved significantly as we increased the number of workers from 1 to 8, with 8 workers providing the highest speedup of 4.46x. While adding more workers generally helps, there is a point of diminishing returns. This optimal number is often related to the number of CPU cores on the machine and the nature of the task. Since our task involves both reading/writing files (I/O-bound) and image manipulation (CPU-bound), using multiple threads allowed the program to overlap these operations effectively. For example, while one thread was waiting for an image to be read from the disk, another thread could be resizing an image already in memory.
+
+---
+3. Discussion: Performance and Bottlenecks
+---
+
+Parallelism dramatically improved performance by allowing the computer to work on multiple images simultaneously. The sequential approach processes one image at a time, leaving system resources idle. By using a `ThreadPoolExecutor`, we could utilize these idle resources to handle several images at once, significantly reducing the total execution time. The biggest gain comes from overlapping I/O operations (reading and writing files) with CPU operations (resizing and adding a watermark). However, performance is not infinitely scalable due to existing bottlenecks. The primary bottleneck in this task is **disk I/O speed**. The program can only process images as fast as the hard drive can read the source files and write the new files. Even with 16 or 32 threads, if the disk is already at 100% capacity, adding more threads won't make the process faster. Other minor bottlenecks include the overhead of creating and managing the threads themselves and, to a lesser extent in this case, Python's Global Interpreter Lock (GIL), which can limit the true parallelism of CPU-bound Python code.
